@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>SujiTheExplorer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23123d35'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23c6ef78'%3E%E2%8C%96%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@700;800&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="shh .css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"></span>SujiTheExplorer</div>
+  <div class="top-r">
+    <button id="navBtn" class="btn" type="button" aria-label="Show or hide the side panel">☰ Panel</button>
+    <button id="locBtn" class="btn lime" type="button">My location</button>
+  </div>
+</header>
+
+<div class="app">
+<aside class="side" aria-label="Map controls">
+  <h1>Explore <em>Palawan.</em></h1>
+  <p class="lead">Search places, drop pins, measure routes and areas, and export your data.</p>
+  <details class="how"><summary>How to use</summary>
+    <ol><li>Search a place or tap a quick-jump button.</li><li>Click the map to select a point.</li><li>Use <b>Add pin</b>, <b>Measure</b> or <b>Radius</b> from the tools.</li><li>Pins are saved in this browser only. Use Export to keep a copy.</li></ol>
+  </details>
+
+  <section class="sec">
+    <label class="lab" for="sIn">Search a place</label>
+    <form id="sForm" class="row" role="search">
+      <input id="sIn" type="search" placeholder="" autocomplete="off" required>
+      <button class="go" type="submit" aria-label="Search">⌕</button>
+    </form>
+    <p id="sMsg" class="help" aria-live="polite">Results are favoured around Palawan.</p>
+    <div id="sRes" class="res"></div>
+    <div id="chips" class="chips" aria-label="Quick jump"></div>
+  </section>
+
+  <section class="sec">
+    <label class="lab" for="gIn">Go to coordinates</label>
+    <form id="gForm" class="row">
+      <input id="gIn" placeholder="9.7392, 118.7353" autocomplete="off" required>
+      <button class="go" type="submit" aria-label="Go to coordinates">➜</button>
+    </form>
+    <p id="gMsg" class="help" aria-live="polite">Latitude first. Decimal or 9°44′21″N 118°44′7″E.</p>
+  </section>
+
+  <section class="sec">
+    <h2 class="lab">Tools</h2>
+    <div class="tools">
+      <button id="addBtn" class="tool" type="button" aria-pressed="false"><span></span><b>Add pin</b><small>Click map · key A</small></button>
+      <button id="measureBtn" class="tool" type="button" aria-pressed="false"><span></span><b>Measure</b><small>Distance + area · key M</small></button>
+      <button id="resetBtn" class="tool" type="button"><span></span><b>Whole Palawan</b><small>Reset the view</small></button>
+      <button id="fitBtn" class="tool" type="button"><span></span><b>Show all pins</b><small>Zoom to fit</small></button>
+      <button id="radiusBtn" class="tool" type="button" aria-pressed="false"><span></span><b>Radius check</b><small>Pins within range · key R</small></button>
+      <button id="clearDrawBtn" class="tool" type="button"><span></span><b>Clear drawings</b><small>Measure and radius</small></button>
+    </div>
+    <div class="rrow"><label for="rKm">Radius (km)</label><input id="rKm" type="number" value="5" min="0.1" max="500" step="0.1"></div>
+  </section>
+
+  <section class="sec">
+    <h2 class="lab">Selected point</h2>
+    <div class="card">
+      <div class="grid3">
+        <div><small>Latitude</small><strong id="lat">—</strong></div>
+        <div><small>Longitude</small><strong id="lng">—</strong></div>
+        <div><small>Elevation</small><strong id="elev">—</strong></div>
+      </div>
+      <div class="addr">
+        <small>Place name / nearest street</small>
+        <strong id="addr">—</strong>
+      </div>
+      <p id="hint" class="help">Click the map, or press and hold on a phone.</p>
+      <div class="acts">
+        <button id="copyBtn" class="lnk" type="button">Copy</button>
+        <button id="fmtBtn" class="lnk" type="button">Show as DMS</button>
+        <button id="pinSelBtn" class="lnk" type="button">Save as pin</button>
+      </div>
+      <div class="acts" id="viewLinks">
+        <a id="gmaps" class="lnk" target="_blank" rel="noopener" hidden>Google Maps</a>
+        <a id="gsv" class="lnk" target="_blank" rel="noopener" hidden>Street View</a>
+        <a id="mly" class="lnk" target="_blank" rel="noopener" hidden>Mapillary</a>
+        <a id="osm" class="lnk" target="_blank" rel="noopener" hidden>OpenStreetMap</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="lab"><h2 style="font:inherit">Saved pins</h2><span id="count" class="pill">0</span></div>
+    <div id="list" class="list"></div>
+    <div class="acts">
+      <button id="exportBtn" class="lnk" type="button">Export file</button>
+      <button id="csvBtn" class="lnk" type="button">Export wps</button>
+      <button id="importBtn" class="lnk" type="button">open files</button>
+      <button id="clearLayerBtn" class="lnk d" type="button" hidden>Remove imported layer</button>
+      <button id="clearBtn" class="lnk d" type="button">Clear all</button>
+      <input id="importFile" type="file" accept=".geojson,.json,application/geo+json,application/json" hidden>
+    </div>
+  </section>
+</aside>
+
+<main class="mapw">
+  <div id="map" role="application" aria-label="Interactive map of Palawan. Arrow keys pan, plus and minus zoom." tabindex="-1"></div>
+  <div id="hud" class="hud" aria-hidden="true">Move the cursor over the map</div>
+  <div id="banner" class="banner" role="status" aria-live="polite" hidden>
+    <span id="btext">Click the map to start measuring.</span>
+    <button id="undoBtn" class="btn" type="button">Undo</button>
+    <button id="doneBtn" class="btn pri" type="button">Done</button>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</main>
+</div>
+
+<dialog id="dlg">
+  <form id="dform">
+    <h2>Save a pin</h2>
+    <p id="dc" class="dc"></p>
+    <p id="dPlace" class="dc"></p>
+    <label for="pName">Name</label>
+    <input id="pName" maxlength="60" placeholder="e.g. Research site" autocomplete="off" required>
+    <label for="pCat">Category</label>
+    <select id="pCat"></select>
+    <label for="pNote">Notes (optional)</label>
+    <textarea id="pNote" rows="3" maxlength="240" placeholder="Short description"></textarea>
+    <div class="da">
+      <button class="btn" type="button" id="dCancel">Cancel</button>
+      <button class="btn pri" type="submit">Save pin</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
